@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Введите вопросы и овтеты</title>
+    <link href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        body {
+            padding-top: 50px;
+            background-color: #f8f9fa;
+        }
+        .card {
+            margin-bottom: 20px;
+        }
+    </style>
+    <script>
+    function addAnswerField(questionNum) {
+        const answersDiv = document.getElementById(`answers${questionNum}`);
+        const newAnswerInput = document.createElement('input');
+        newAnswerInput.type = 'text';
+        newAnswerInput.className = 'form-control mb-2';
+        newAnswerInput.name = `answers${questionNum}[]`; // Use an array notation
+        newAnswerInput.required = true;
+        answersDiv.appendChild(newAnswerInput);
+    }
+    </script>
+</head>
+<body>
+    <div class="container">
+        <h1 class="text-center mt-3">Введите вопросы и ответы на них</h1>
+        <form action="/generate_pdf" method="post">
+            <div class="row">
+                {% for i in range(num_questions) %}
+                    <div class="col-md-6 mx-auto">
+                        <div class="card">
+                            <div class="card-body">
+                                <h3 class="card-title">Вопрос {{ i+1 }}</h3>
+                                <div class="form-group">
+                                    <label for="question{{ i+1 }}">Введите вопрос:</label>
+                                    <input type="text" class="form-control" id="question{{ i+1 }}" name="question{{ i+1 }}" required>
+                                </div>
+                                <div class="form-group">
+                                    <label for="answers{{ i+1 }}">Введите ответы:</label>
+                                    <div id="answers{{ i+1 }}">
+                                        <input type="text" class="form-control mb-2" name="answers{{ i+1 }}[]" required>
+                                    </div>
+                                    <button type="button" class="btn btn-secondary btn-sm" onclick="addAnswerField({{ i+1 }})">Добавить еще один ответ</button>
+                                </div>
+                                <div class="form-group">
+                                    <label for="correct_answer{{ i+1 }}">Введите номер правильного ответа:</label>
+                                    <input type="number" class="form-control" id="correct_answer{{ i+1 }}" name="correct_answer{{ i+1 }}" min="1" required>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                {% endfor %}
+            </div>
+            <div class="text-center mt-3">
+                <input type="hidden" name="num_questions" value="{{ num_questions }}">
+                <input type="submit" class="btn btn-success" value="Submit Matrix">
+            </div>
+        </form>
+    </div>
+</body>
+</html>
