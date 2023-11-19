@@ -3,24 +3,160 @@
 <head>
     <meta charset="UTF-8">
     <title>ScanTest</title>
-    <link href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
     <style>
         body {
-            padding-top: 50px;
             background-color: #f8f9fa;
         }
-        .container {
-            text-align: center;
+
+        .custom-table-width {
+          width: 100%;
+          overflow-x: auto;
+        }
+
+        .table td{
+            vertical-align: middle;
         }
     </style>
+
+    <script>
+        function deleteTest(testId){
+            $.ajax({
+                url: '/delete_test',
+                method: 'GET',
+                data: { test_id: testId },
+                success: function(response) {
+                    location.reload();
+                },
+                    error: function(error) {
+                }
+            });
+        }
+
+        function generatePdf(testId){
+
+            let element = document.getElementById(`students-num-${testId}`);
+            let studentsNum = 1
+            if (element && element.value.trim() !== '') {
+                studentsNum = element.value;
+            }
+            $.ajax({
+                url: '/generate_pdf',
+                method: 'POST',
+                data: { test_id: testId, students_num: studentsNum },
+                xhrFields: {
+                    responseType: 'blob' // Ensure the response is treated as a blob
+                },
+                success: function(data) {
+                  const blob = new Blob([data], { type: 'application/pdf' });
+                  const link = document.createElement('a');
+                  link.href = window.URL.createObjectURL(blob);
+                  link.download = 'test.pdf';
+                  document.body.appendChild(link);
+                  link.click();
+                  document.body.removeChild(link);
+                },
+                error: function(error) {
+                    console.error('Error:', error);
+                }
+            });
+        }
+    </script>
 </head>
 <body>
+
+{% if success != '' %}
+    <div class="alert alert-success alert-dismissible fade show" role="alert">
+        {{ success }}
+        <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+            <span aria-hidden="true">&times;</span>
+        </button>
+    </div>
+
+    <script>
+        // Скрипт для автоматического скрытия сообщения через 5 секунд
+        $(document).ready(function(){
+            $(".alert").delay(5000).slideUp('slow');
+        });
+    </script>
+{% endif %}
+    <header>
+        <nav class="navbar navbar-light box-shadow mb-3 bg-primary">
+            <div class="container-fluid">
+                <a class="navbar-brand text-light" href="/">JustTest</a>
+            </div>
+        </nav>
+    </header>
     <div class="container">
-        <h1>Введите число вопросов</h1>
-        <form action="/" method="post">
-            <input type="number" name="num_questions" min="1" required>
-            <input type="submit" class="btn btn-primary" value="Submit">
-        </form>
+        <div class="card">
+            <div class="ml-3 mr-3 mt-3 mb-5">
+                <h3>Создать новый тест</h3>
+            </div>
+            <div class="ml-3 mr-3 mt-3">
+                <p>Введите количество вопросов</p>
+            </div>
+            <form action="/" method="post">
+                <div class="row-md-6 row-8 ml-3 mr-3 mb-3 mt-1">
+                    <input type="number" class="col-lg-4 row-md-4 col-sm-2 col-4 m-1" name="num_questions" min="1" required>
+                    <input type="submit" class="btn btn-primary col-lg-2 row-md-2 col-sm-4 col-4 m-1" value="Отправить" >
+                </div>
+            </form>
+        </div>
+
+        <div class="card">
+            <div class="ml-3 mr-3 mt-3 mb-5">
+                <h3>Выберите тест для распечатки</h3>
+                <table class="table table-striped custom-table-width">
+                    <tbody class="custom-table-width">
+                    {% if tests %}
+                    {% for test in tests:%}
+                        <tr>
+                            <td class="col-1">{{ test[0] }}</td>
+                            <td class="col-4">{{ test[1] }}</td>
+                            <td class="col-4"><input type="number" class="form-control" id="students-num-{{ test[0 ]}}" min="1" placeholder="Количество участников теста"></td>
+                            <td class="col-2"><button class="btn btn-success" onclick="generatePdf('{{ test[0] }}')">Печать</button></td>
+                            <td class="col-1"><button class="btn btn-danger" onclick="deleteTest('{{ test[0] }}')"><i style="font-size:12px color:#ffffff" class="fa">&#xf014;</i></button> </td>
+                        </tr>
+                    {% endfor %}
+                    {% else %}
+                        <p class="mt-5">Вы не добавили ни одного теста</p>
+                    {% endif %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+         <div class="card">
+            <div class="ml-3 mr-3 mt-3 mb-5">
+                <h3>Выберите тест для распознавания</h3>
+                <form action="/recognize" method="post" enctype="multipart/form-data" class="needs-validation" novalidate>
+                    <div class="form-group mb-3">
+                        <label for="testSelect">Выберите тест:</label>
+                        <select class="form-control" id="testSelect" name="test_id" required>
+                            <option value="" disabled selected>Выберите тест</option>
+                            {% if tests %}
+                            {% for test in tests:%}
+                                <option value="{{ test[0] }}">{{ test[1] }}</option>
+                            {% endfor %}
+                            {% else %}
+                                <option value="" disabled selected>Вы не добавили ни одного теста</option>
+                            {% endif %}
+                        </select>
+                    </div>
+                    <div class="custom-file mb-3">
+                        <input type="file" class="custom-file-input" id="customFile" name="images" multiple>
+                        <label class="custom-file-label" for="customFile">Выберите изображения...</label>
+                    </div>
+                    <button type="submit" class="btn btn-primary">Загрузить</button>
+                </form>
+            </div>
+         </div>
     </div>
 </body>
 </html>
+
+
+

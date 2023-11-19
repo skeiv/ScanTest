@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Студенческий отчет</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+</head>
+<body>
+    <header>
+        <nav class="navbar navbar-light box-shadow mb-3 bg-primary">
+            <div class="container-fluid">
+                <a class="navbar-brand text-light" href="/">JustTest</a>
+            </div>
+        </nav>
+    </header>
+    <div class="container mt-4">
+        <h1 class="text-center mb-4">Отчет о баллах студентов и неправильных ответах</h1>
+        <table class="table table-bordered table-hover">
+            <thead class="table-dark">
+                <tr>
+                    <th>Номер студента</th>
+                    <th>Балл за тест</th>
+                    <th>Неправильные ответы</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for student, points in points.items() %}
+                <tr>
+                    <td>{{ student }}</td>
+                    <td>{{ points }}</td>
+                    <td>
+                        {% for answer in incorrect_answers[student] %}
+                            {{ answer }},
+                        {% endfor %}
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</body>
+</html>
